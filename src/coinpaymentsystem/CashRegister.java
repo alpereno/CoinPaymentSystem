@@ -101,8 +101,8 @@ public class CashRegister {
 
     public Optional<String> suggestAlternative(double amount) {
         for (double delta = 0.05; delta <= 1.00; delta += 0.05) {
-            double suggestedAmount = amount - delta;
-            if (suggestedAmount > 0 && canGiveChange(suggestedAmount)) {
+            double suggestedAmount = amount + delta;
+            if (canGiveChange(suggestedAmount)) {
                 return Optional.of(String.format("%.2f TL'niz var mıydı?", delta));
             }
         }
