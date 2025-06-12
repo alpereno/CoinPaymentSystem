@@ -114,4 +114,8 @@ public class CashRegister {
             coinInventory.put(coin, number);
         }
     }
+
+    public int getCoinCount(Coin coin) {
+        return coinInventory.getOrDefault(coin, 0);
+    }
 }
