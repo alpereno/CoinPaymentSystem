@@ -20,47 +20,41 @@ public class PaymentUI extends JFrame {
 
     private final JTextArea outputArea = new JTextArea(10, 40);
 
-    // Kasadaki miktarları göstermek için:
     private final Map<Coin, JLabel> coinCountLabels = new EnumMap<>(Coin.class);
     private final Map<Coin, JLabel> coinTotalLabels = new EnumMap<>(Coin.class);
     private final JLabel totalLabel = new JLabel("Toplam: 0.00 TL");
 
     public PaymentUI() {
-        setTitle("Bozuk Para Ödeme Sistemi");
+        setTitle("Para Ödeme Sistemi");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Kasayı başlat paneli
         JPanel setupPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         setupPanel.setBorder(BorderFactory.createTitledBorder("Kasa Başlatma"));
-        setupPanel.add(new JLabel("Her bozuk para için başlangıç adedi:"));
+        setupPanel.add(new JLabel("Her para türü için başlangıç adedi:"));
         setupPanel.add(defaultCountField);
         setupPanel.add(initializeButton);
-
         initializeButton.addActionListener(this::initializeCashRegister);
 
-        // Ödeme giriş paneli
         JPanel inputPanel = new JPanel(new GridLayout(0, 2, 5, 5));
         inputPanel.setBorder(BorderFactory.createTitledBorder("Ödeme Bilgileri"));
         inputPanel.add(new JLabel("Ürün Fiyatı (TL):"));
         inputPanel.add(priceField);
 
         for (Coin coin : Coin.values()) {
-            JTextField coinField = new JTextField("0");
-            coinFields.put(coin, coinField);
+            JTextField field = new JTextField("0");
+            coinFields.put(coin, field);
             inputPanel.add(new JLabel(coin.name() + " adedi:"));
-            inputPanel.add(coinField);
+            inputPanel.add(field);
         }
 
         payButton.addActionListener(this::handlePayment);
-        payButton.setEnabled(false); // Başlangıçta devre dışı
+        payButton.setEnabled(false);
 
-        // Console çıktısı
         JScrollPane scrollPane = new JScrollPane(outputArea);
         outputArea.setEditable(false);
         outputArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
 
-        // Sağdaki kasa durumu paneli
         JPanel inventoryPanel = new JPanel();
         inventoryPanel.setLayout(new BoxLayout(inventoryPanel, BoxLayout.Y_AXIS));
         inventoryPanel.setBorder(BorderFactory.createTitledBorder("Kasa Durumu"));
@@ -82,7 +76,6 @@ public class PaymentUI extends JFrame {
         inventoryPanel.add(Box.createVerticalStrut(10));
         inventoryPanel.add(totalLabel);
 
-        // Yerleşim düzeni
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(inputPanel, BorderLayout.CENTER);
         centerPanel.add(inventoryPanel, BorderLayout.EAST);
@@ -110,7 +103,7 @@ public class PaymentUI extends JFrame {
             register.initializeDefaultCoins(defaultCount);
             processor = new PaymentProcessor(register);
 
-            outputArea.setText("Kasa " + defaultCount + " adet bozuk parayla başlatıldı.\n");
+            outputArea.setText("Kasa " + defaultCount + " adet para ile başlatıldı.\n");
             payButton.setEnabled(true);
             initializeButton.setEnabled(false);
             defaultCountField.setEditable(false);
@@ -138,12 +131,10 @@ public class PaymentUI extends JFrame {
                 }
             }
 
-            // Konsol çıktısını JTextArea'ya yönlendir
             outputArea.setText("");
             ConsoleCapturer capturer = new ConsoleCapturer(outputArea);
             capturer.capture(() -> processor.processPayment(price, payment));
 
-            // Ödeme sonrası kasa durumu güncelle
             updateInventoryDisplay();
 
         } catch (NumberFormatException ex) {
@@ -163,7 +154,6 @@ public class PaymentUI extends JFrame {
 
             coinCountLabels.get(coin).setText(count + " adet");
             coinTotalLabels.get(coin).setText(String.format("%.2f TL", subtotal));
-
             total += subtotal;
         }
 

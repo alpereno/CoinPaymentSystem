@@ -99,6 +99,10 @@ public class CashRegister {
         }
     }
 
+    public Map<Coin, Integer> getCoinInventory() {
+        return coinInventory;
+    }
+
     public Optional<String> suggestAlternative(double amount) {
         for (double delta = 0.05; delta <= 1.00; delta += 0.05) {
             double suggestedAmount = amount + delta;
