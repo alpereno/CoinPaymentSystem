@@ -14,6 +14,8 @@ public class PaymentUI extends JFrame {
     private final JTextField defaultCountField = new JTextField("3");
     private final JButton initializeButton = new JButton("Kasayı Başlat");
 
+    private final Map<Coin, JTextField> customInitFields = new EnumMap<>(Coin.class);
+
     private final JTextField priceField = new JTextField(10);
     private final Map<Coin, JTextField> coinFields = new EnumMap<>(Coin.class);
     private final JButton payButton = new JButton("Ödeme Yap");
@@ -28,12 +30,41 @@ public class PaymentUI extends JFrame {
         setTitle("Para Ödeme Sistemi");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
+        setPreferredSize(new Dimension(900, 850));
 
-        JPanel setupPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel setupPanel = new JPanel();
+        setupPanel.setLayout(new BoxLayout(setupPanel, BoxLayout.Y_AXIS));
         setupPanel.setBorder(BorderFactory.createTitledBorder("Kasa Başlatma"));
-        setupPanel.add(new JLabel("Her para türü için başlangıç adedi:"));
-        setupPanel.add(defaultCountField);
-        setupPanel.add(initializeButton);
+
+        JPanel defaultInitPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        defaultInitPanel.add(new JLabel("Tüm para türleri için başlangıç adedi:"));
+        defaultInitPanel.add(defaultCountField);
+        defaultInitPanel.add(initializeButton);
+
+        setupPanel.add(defaultInitPanel);
+
+        JPanel customGroupPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+        JPanel kurusPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+        JPanel tlPanel = new JPanel(new GridLayout(0, 2, 5, 5));
+
+        for (Coin coin : Coin.values()) {
+            JTextField field = new JTextField("0");
+            customInitFields.put(coin, field);
+            if (coin.getValue() < 1.0) {
+                kurusPanel.add(new JLabel(coin.name() + ":"));
+                kurusPanel.add(field);
+            } else {
+                tlPanel.add(new JLabel(coin.name() + ":"));
+                tlPanel.add(field);
+            }
+        }
+
+        customGroupPanel.add(kurusPanel);
+        customGroupPanel.add(tlPanel);
+
+        setupPanel.add(new JLabel("Veya her bir para türü için başlangıç adedi girin:"));
+        setupPanel.add(customGroupPanel);
+
         initializeButton.addActionListener(this::initializeCashRegister);
 
         JPanel inputPanel = new JPanel(new GridLayout(0, 2, 5, 5));
@@ -95,27 +126,51 @@ public class PaymentUI extends JFrame {
     }
 
     private void initializeCashRegister(ActionEvent e) {
-        try {
-            int defaultCount = Integer.parseInt(defaultCountField.getText().trim());
-            if (defaultCount < 0) throw new NumberFormatException();
+        register = new CashRegister();
 
-            register = new CashRegister();
-            register.initializeDefaultCoins(defaultCount);
-            processor = new PaymentProcessor(register);
+        boolean customUsed = false;
+        Map<Coin, Integer> initMap = new EnumMap<>(Coin.class);
 
-            outputArea.setText("Kasa " + defaultCount + " adet para ile başlatıldı.\n");
-            payButton.setEnabled(true);
-            initializeButton.setEnabled(false);
-            defaultCountField.setEditable(false);
-
-            updateInventoryDisplay();
-
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Lütfen geçerli bir pozitif tam sayı girin!",
-                    "Hatalı Giriş",
-                    JOptionPane.ERROR_MESSAGE);
+        for (Coin coin : Coin.values()) {
+            String text = customInitFields.get(coin).getText().trim();
+            int value = 0;
+            if (!text.isEmpty()) {
+                try {
+                    value = Integer.parseInt(text);
+                    if (value < 0) throw new NumberFormatException();
+                    if (value > 0) customUsed = true;
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, coin.name() + " için geçersiz giriş!", "Hata", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            }
+            initMap.put(coin, value);
         }
+
+        if (customUsed) {
+            register.addCoins(initMap);
+            outputArea.setText("Kasa elle belirtilen adetlerle başlatıldı.\n");
+        } else {
+            try {
+                int defaultCount = Integer.parseInt(defaultCountField.getText().trim());
+                if (defaultCount < 0) throw new NumberFormatException();
+                register.initializeDefaultCoins(defaultCount);
+                outputArea.setText("Kasa tüm para türleri için " + defaultCount + " adet ile başlatıldı.\n");
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Geçerli bir varsayılan adet girin!", "Hatalı Giriş", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+        }
+
+        processor = new PaymentProcessor(register);
+        payButton.setEnabled(true);
+        initializeButton.setEnabled(false);
+        defaultCountField.setEditable(false);
+        for (JTextField field : customInitFields.values()) {
+            field.setEditable(false);
+        }
+
+        updateInventoryDisplay();
     }
 
     private void handlePayment(ActionEvent e) {
@@ -161,6 +216,9 @@ public class PaymentUI extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(PaymentUI::new);
+        SwingUtilities.invokeLater(() -> {
+            PaymentUI ui = new PaymentUI();
+            ui.setVisible(true);
+        });
     }
 }
