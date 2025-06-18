@@ -8,7 +8,9 @@ public class CoinPaymentSystem {
 
     public static void main(String[] args) {
         // TODO code application logic here
-
+        // console class 
+        // DEPRECATED 
+        
         CashRegister register = new CashRegister();
         register.initializeDefaultCoins(3);
         register.printInventory(); // Bakiyeyi göster

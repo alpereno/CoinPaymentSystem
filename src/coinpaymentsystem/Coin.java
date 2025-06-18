@@ -1,7 +1,7 @@
 package coinpaymentsystem;
 
 public enum Coin {
-
+    // para türlerinin tanımlandığı class
     KURUS_05(0.05),
     KURUS_10(0.10),
     KURUS_25(0.25),

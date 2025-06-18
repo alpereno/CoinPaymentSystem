@@ -24,21 +24,21 @@ public class PaymentProcessor {
 
         double changeAmount = Math.round((paidAmount - price) * 100.0) / 100.0;
 
-        // 🔹 1. Önce geçici olarak ödeme kasaya eklenir
+        // geçici olarak ödemeyi kasaya ekle
         cashRegister.addCoins(paymentCoins);
 
-        // 🔹 2. Bu yeni durumda para üstü verilebiliyor mu kontrol edilir
+        // para üstü verilebiliyor mu kontrol et
         Map<Coin, Integer> change = cashRegister.calculateChange(changeAmount);
 
         if (changeAmount > 0 && change.isEmpty()) {
-            // 🔸 3. Yeni durumda da para üstü verilemiyorsa → ödeme iptal
+            // Para üstü verilemiyorsa: ödeme iptal
             System.out.println("Para üstü verilemiyor! Ödeme iptal edildi.");
 
-            // 🔸 Tavsiye mesajı
+            // Öneri mesajı
             Optional<String> suggestion = cashRegister.suggestAlternative(changeAmount);
             suggestion.ifPresent(System.out::println);
 
-            // 🔸 4. Ödeme kasadan geri alınır
+            // Ödeme kasadan geri alınır
             for (Map.Entry<Coin, Integer> entry : paymentCoins.entrySet()) {
                 Coin coin = entry.getKey();
                 int currentCount = cashRegister.getCoinInventory().get(coin);
@@ -48,7 +48,7 @@ public class PaymentProcessor {
             return;
         }
 
-        // 🔹 4. Ödeme geçerli, para üstü varsa verilir
+        // Ödeme işlemi tamam para üstü varsa verilir
         if (changeAmount == 0) {
             System.out.println("Tam ödeme alındı, para üstü yok.");
         } else {
@@ -60,7 +60,7 @@ public class PaymentProcessor {
             cashRegister.giveChange(change);
         }
 
-        // 🔹 5. Kasa durumu yazdırılır
+        // Kasa durumu yazdırılır
         cashRegister.printInventory();
     }
 
