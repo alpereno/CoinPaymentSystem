@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Random;
 
 public class PaymentUI extends JFrame {
 
@@ -13,6 +14,7 @@ public class PaymentUI extends JFrame {
 
     private final JTextField defaultCountField = new JTextField("3");
     private final JButton initializeButton = new JButton("Kasayı Başlat");
+    private final JButton randomInitButton = new JButton("Rastgele Başlat");
 
     private final Map<Coin, JTextField> customInitFields = new EnumMap<>(Coin.class);
 
@@ -26,13 +28,16 @@ public class PaymentUI extends JFrame {
     private final Map<Coin, JLabel> coinTotalLabels = new EnumMap<>(Coin.class);
     private final JLabel totalLabel = new JLabel("Toplam: 0.00 TL");
 
+    private JPanel setupPanel;
+
     public PaymentUI() {
         setTitle("Para Ödeme Sistemi");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
         setPreferredSize(new Dimension(900, 850));
 
-        JPanel setupPanel = new JPanel();
+        // === Kasa Başlatma Paneli ===
+        setupPanel = new JPanel();
         setupPanel.setLayout(new BoxLayout(setupPanel, BoxLayout.Y_AXIS));
         setupPanel.setBorder(BorderFactory.createTitledBorder("Kasa Başlatma"));
 
@@ -40,6 +45,7 @@ public class PaymentUI extends JFrame {
         defaultInitPanel.add(new JLabel("Tüm para türleri için başlangıç adedi:"));
         defaultInitPanel.add(defaultCountField);
         defaultInitPanel.add(initializeButton);
+        defaultInitPanel.add(randomInitButton); // Rastgele buton kısmı
 
         setupPanel.add(defaultInitPanel);
 
@@ -66,7 +72,9 @@ public class PaymentUI extends JFrame {
         setupPanel.add(customGroupPanel);
 
         initializeButton.addActionListener(this::initializeCashRegister);
+        randomInitButton.addActionListener(this::initializeCashRegisterRandom);
 
+        // === Ödeme Paneli ===
         JPanel inputPanel = new JPanel(new GridLayout(0, 2, 5, 5));
         inputPanel.setBorder(BorderFactory.createTitledBorder("Ödeme Bilgileri"));
         inputPanel.add(new JLabel("Ürün Fiyatı (TL):"));
@@ -86,6 +94,7 @@ public class PaymentUI extends JFrame {
         outputArea.setEditable(false);
         outputArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
 
+        // === Kasa Durumu Paneli ===
         JPanel inventoryPanel = new JPanel();
         inventoryPanel.setLayout(new BoxLayout(inventoryPanel, BoxLayout.Y_AXIS));
         inventoryPanel.setBorder(BorderFactory.createTitledBorder("Kasa Durumu"));
@@ -107,6 +116,7 @@ public class PaymentUI extends JFrame {
         inventoryPanel.add(Box.createVerticalStrut(10));
         inventoryPanel.add(totalLabel);
 
+        // === UI elementleri ekrana Yerleştirme ===
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(inputPanel, BorderLayout.CENTER);
         centerPanel.add(inventoryPanel, BorderLayout.EAST);
@@ -117,7 +127,6 @@ public class PaymentUI extends JFrame {
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.add(payButton, BorderLayout.NORTH);
         bottomPanel.add(scrollPane, BorderLayout.CENTER);
-
         add(bottomPanel, BorderLayout.SOUTH);
 
         pack();
@@ -162,14 +171,28 @@ public class PaymentUI extends JFrame {
             }
         }
 
-        processor = new PaymentProcessor(register);
-        payButton.setEnabled(true);
-        initializeButton.setEnabled(false);
-        defaultCountField.setEditable(false);
-        for (JTextField field : customInitFields.values()) {
-            field.setEditable(false);
+        finishInitialization();
+    }
+
+    private void initializeCashRegisterRandom(ActionEvent e) {
+        register = new CashRegister();
+        Map<Coin, Integer> randomInit = new EnumMap<>(Coin.class);
+        Random rand = new Random();
+
+        for (Coin coin : Coin.values()) {
+            int randomCount = rand.nextInt(10) + 1; // 1-10 arası
+            randomInit.put(coin, randomCount);
         }
 
+        register.addCoins(randomInit);
+        outputArea.setText("Kasa rastgele sayılarla başlatıldı.\n");
+        finishInitialization();
+    }
+
+    private void finishInitialization() {
+        processor = new PaymentProcessor(register);
+        payButton.setEnabled(true);
+        setupPanel.setVisible(false); // Ekrandan tamamen kaldır
         updateInventoryDisplay();
     }
 

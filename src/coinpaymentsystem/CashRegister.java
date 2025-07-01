@@ -84,7 +84,7 @@ public class CashRegister {
                 return true;
             }
             if (i > 0) {
-                result.remove(coin); // geri al
+                result.remove(coin);
             }
         }
 
@@ -103,13 +103,22 @@ public class CashRegister {
         return coinInventory;
     }
 
-    public Optional<String> suggestAlternative(double amount) {
-        for (double delta = 0.05; delta <= 1.00; delta += 0.05) {
-            double suggestedAmount = amount + delta;
+    public Optional<String> suggestAlternative(double changeAmount) {
+        // Eğer mevcut kombinasyonla para üstü verilemiyorsa, alternatif öneri sun
+        List<Double> possibleExtras = new ArrayList<>();
+        for (Coin coin : Coin.values()) {
+            possibleExtras.add(coin.getValue());
+        }
+
+        possibleExtras.sort(Double::compare);
+
+        for (double delta : possibleExtras) {
+            double suggestedAmount = Math.round((changeAmount + delta) * 100.0) / 100.0;
             if (canGiveChange(suggestedAmount)) {
                 return Optional.of(String.format("%.2f TL'niz var mıydı?", delta));
             }
         }
+
         return Optional.empty();
     }
 
