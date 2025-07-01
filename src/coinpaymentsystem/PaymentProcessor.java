@@ -61,7 +61,7 @@ public class PaymentProcessor {
         }
 
         // Kasa durumu yazdırılır
-        cashRegister.printInventory();
+        //cashRegister.printInventory();
     }
 
 }
